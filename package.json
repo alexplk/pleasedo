@@ -10,5 +10,8 @@
         "automation",
         "devtools",
         "cli"
-    ]
+    ],
+    "scripts": {
+        "patch-release": "npm version patch && npm publish && git push --follow-tags"
+    }
 }
