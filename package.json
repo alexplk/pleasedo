@@ -1,0 +1,14 @@
+{
+    "name": "pleasedo",
+    "version": "1.0.1",
+    "description": "Runs your scripts from anywhere in the project",
+    "license": "MIT",
+    "repository": "alexplk/pleasedo",
+    "main": "index.js",
+    "keywords": [
+        "scripts",
+        "automation",
+        "devtools",
+        "cli"
+    ]
+}
