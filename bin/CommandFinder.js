@@ -1,6 +1,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const fuzzy = require('fuzzy');
+const style = require('ansi-styles');
 
 const scriptsDirNames = ['scripts'];
 const npmPackageNames = ['package.json'];
@@ -50,7 +52,7 @@ function sleep(ms) {
 //   path: '/path/project1/scripts/run-local.sh'
 // }
 
-async function getCommandsInDir(dir) {
+async function getCommandsInDir(dir, startDir) {
   const nodes = await fs.promises.readdir(dir);
   const execAwaits = nodes.map(async (name) => {
     const scriptPath = path.join(dir, name);
@@ -58,7 +60,8 @@ async function getCommandsInDir(dir) {
     if (isScript) {
       return {
         name,
-        path: scriptPath
+        path: scriptPath,
+        preview: path.relative(startDir, scriptPath)
       };
     } else {
       return null;
@@ -68,13 +71,13 @@ async function getCommandsInDir(dir) {
   return execCommands.filter(x => x);
 }
 
-async function getCommandSourcesForScriptsDir(dir) {
+async function getCommandSourcesForScriptsDir(dir, startDir) {
   const dirname = path.basename(dir);
   const dirChecks = scriptsDirNames.map(async (scriptsName) => {
     const scriptsPath = path.join(dir, scriptsName);
     const exists = await isDirectory(scriptsPath);
     if (exists) {
-      const commands = await getCommandsInDir(scriptsPath);
+      const commands = await getCommandsInDir(scriptsPath, startDir);
       return {
         name: dirname,
         category: scriptsName,
@@ -108,7 +111,7 @@ async function getDirTree(startDir) {
 async function getCommandSources(startDir) {
   const dirTree = await getDirTree(startDir);
   const sourcesPromises = dirTree.flatMap(dir => [
-    getCommandSourcesForScriptsDir(dir),
+    getCommandSourcesForScriptsDir(dir, startDir),
     getCommandSourceForNpmPackage(dir)
   ]);
   const sources = await Promise.all(sourcesPromises);
@@ -136,9 +139,26 @@ class CommandFinder {
 
   async find(pattern) {
     await this.discover();
-    return this.commandSources;
-  }
 
+    const fieldSep = '</>';
+    const options = {
+      pre: style.green.open,
+      post: style.green.close,
+      extract: x => `${x.name}`
+      // extract: x => `${x.source.name}${fieldSep}${x.source.category}${fieldSep}${x.name}`
+    };
+
+    const results = this.commandSources.map(source => {
+      const commands = source.commands.map(command => ({...command, source}));
+      // const commandStrings = commands.map(x => extract(x))
+      const filtered = fuzzy.filter(pattern || '', commands, options);
+      return {
+        ...source,
+        commands: filtered.map(f => ({ ...f.original, match: f.string.split(fieldSep).pop() }))
+      };
+    });
+    return results.filter(group => group.commands.length > 0);
+  }
 }
 
 module.exports = CommandFinder;

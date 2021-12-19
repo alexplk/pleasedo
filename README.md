@@ -11,6 +11,6 @@ npm i -g pleasedo
 
 # Run
 
-Type `do` from any directory. Search commands interactively by script name or description.
+Type `pls` from any directory. Search commands interactively by script name or description.
 
-Or type `do <search terms>`.
+Or type `pls <search terms>`.
