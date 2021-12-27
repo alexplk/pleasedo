@@ -34,7 +34,7 @@ function runCommand(command) {
     if (commandStr.toLowerCase().endsWith('.ps1')) {
       commandStr = 'powershell ' + commandStr;
     }
-    const proc = spawn(command.path, { stdio: 'inherit', shell: true });
+    const proc = spawn(commandStr, { stdio: 'inherit', shell: true });
     proc.on('error', handleError);
   } catch (error) {
     handleError(error);
