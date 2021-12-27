@@ -12,7 +12,7 @@ async function findCommandSource(commandFinder, pattern) {
   const commandGroups = await commandFinder.find(pattern);
   return [...commandGroups.flatMap(group => {
     return [
-      new inquirer.Separator(`${group.name} ${group.category}`), // ───
+      new inquirer.Separator(`${style.gray.open}─ ${group.name || '/'} ${group.category} ${style.gray.close}─`), // ───
       ...group.commands.map(command => ({
         name: command.match,
         value: command,
@@ -24,7 +24,21 @@ async function findCommandSource(commandFinder, pattern) {
 
 function runCommand(command) {
   console.log(style.green.open + command.preview + style.green.close);
-  spawn(command.path, { stdio: 'inherit' });
+  const handleError = (error) => {
+    console.error(error.message);
+  };
+  try {
+    let commandStr = command.path;
+    // A little cheat to run ps1.
+    // TODO: Make this part of script discovery.
+    if (commandStr.toLowerCase().endsWith('.ps1')) {
+      commandStr = 'powershell ' + commandStr;
+    }
+    const proc = spawn(command.path, { stdio: 'inherit', shell: true });
+    proc.on('error', handleError);
+  } catch (error) {
+    handleError(error);
+  }
 }
 
 async function main() {
