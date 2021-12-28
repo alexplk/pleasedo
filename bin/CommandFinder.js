@@ -1,7 +1,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const fuzzy = require('fuzzy');
+// const fuzzy = require('fuzzy');
+const fuzzyjs = require('fuzzyjs');
 const style = require('ansi-styles');
 
 const scriptsDirNames = ['scripts'];
@@ -140,7 +141,7 @@ class CommandFinder {
   async find(pattern) {
     await this.discover();
 
-    const fieldSep = '</>';
+    const fieldSep = '/&/';
     const options = {
       pre: style.green.open,
       post: style.green.close,
@@ -149,12 +150,25 @@ class CommandFinder {
     };
 
     const results = this.commandSources.map(source => {
-      const commands = source.commands.map(command => ({...command, source}));
+      const commands = [...source.commands.map(command => ({...command, source}))];
+
       // const commandStrings = commands.map(x => extract(x))
-      const filtered = fuzzy.filter(pattern || '', commands, options);
+      // const filtered = fuzzy.filter(pattern || '', commands, options);
+      // const matchedCommands = filtered.map(f => ({ ...f.original, match: f.string.split(fieldSep).pop() }))
+
+      const matched = commands.map(x => ({ ...fuzzyjs.match(pattern || '', '/' + x.name), original: x }));
+      const filtered = matched.filter(x => x.match);
+      const matchedCommands = filtered.map(x => ({
+        ...x.original,
+        match: !pattern ? x.original.name : fuzzyjs.surround('/' + x.original.name, {
+          result: x,
+          prefix: style.green.open,
+          suffix: style.green.close }
+        ) + ` ${style.gray.open}(${x.score})${style.gray.close}`
+      }));
       return {
         ...source,
-        commands: filtered.map(f => ({ ...f.original, match: f.string.split(fieldSep).pop() }))
+        commands: matchedCommands
       };
     });
     return results.filter(group => group.commands.length > 0);

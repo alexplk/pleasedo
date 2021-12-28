@@ -12,7 +12,7 @@ async function findCommandSource(commandFinder, pattern) {
   const commandGroups = await commandFinder.find(pattern);
   return [...commandGroups.flatMap(group => {
     return [
-      new inquirer.Separator(`${style.gray.open}─ ${group.name || '/'} ${group.category} ${style.gray.close}─`), // ───
+      new inquirer.Separator(`${style.gray.open}─ ${group.name || '/'} ${group.category} ─${style.gray.close}`),
       ...group.commands.map(command => ({
         name: command.match,
         value: command,
