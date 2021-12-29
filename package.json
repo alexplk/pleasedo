@@ -1,6 +1,6 @@
 {
     "name": "pleasedo",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "Runs your scripts from anywhere in the project",
     "license": "MIT",
     "repository": "alexplk/pleasedo",
