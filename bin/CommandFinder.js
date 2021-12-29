@@ -1,7 +1,6 @@
 
 const fs = require('fs');
 const path = require('path');
-// const fuzzy = require('fuzzy');
 const fuzzyjs = require('fuzzyjs');
 const style = require('ansi-styles');
 
@@ -160,18 +159,22 @@ class CommandFinder {
       const filtered = matched.filter(x => x.match);
       const matchedCommands = filtered.map(x => ({
         ...x.original,
+        score: x.score,
         match: !pattern ? x.original.name : fuzzyjs.surround('/' + x.original.name, {
           result: x,
           prefix: style.green.open,
           suffix: style.green.close }
-        ) + ` ${style.gray.open}(${x.score})${style.gray.close}`
-      }));
+        ).substring(1) // + ` ${style.gray.open}(${x.score})${style.gray.close}`
+      })).sort((a, b) => b.score - a.score);
       return {
         ...source,
         commands: matchedCommands
       };
     });
-    return results.filter(group => group.commands.length > 0);
+    const groups = results
+      .filter(group => group.commands.length > 0)
+      .sort((a, b) => b.commands[0].score - a.commands[0].score);
+    return groups;
   }
 }
 
